@@ -19,7 +19,7 @@ export default function RegisterPage() {
     name: "",
     email: "",
     password: "",
-    targetLanguage: "Ingles" as LanguageOption,
+    targetLanguage: "Inglês" as LanguageOption,
   });
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
