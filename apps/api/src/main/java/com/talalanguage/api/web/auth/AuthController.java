@@ -8,7 +8,7 @@ import com.talalanguage.api.application.auth.RequestPasswordResetUseCase;
 import com.talalanguage.api.application.auth.ResetPasswordUseCase;
 import com.talalanguage.api.application.auth.exception.AuthenticationRequiredException;
 import com.talalanguage.api.web.auth.dto.AuthSessionResponseDto;
-import com.talalanguage.api.web.auth.dto.AuthUserResponseDto;
+import com.talalanguage.api.web.auth.dto.AuthenticatedUserResponseDto;
 import com.talalanguage.api.web.auth.dto.LoginRequestDto;
 import com.talalanguage.api.web.auth.dto.RegisterRequestDto;
 import com.talalanguage.api.web.auth.dto.ForgotPasswordRequestDto;
@@ -75,13 +75,13 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public AuthUserResponseDto me(Authentication authentication) {
+    public AuthenticatedUserResponseDto me(Authentication authentication) {
         if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
             throw new AuthenticationRequiredException();
         }
 
         var result = getAuthenticatedUserUseCase.execute(new GetAuthenticatedUserUseCase.Command(authentication.getName()));
-        return AuthUserResponseDto.from(result);
+        return AuthenticatedUserResponseDto.from(result);
     }
 
     @PostMapping("/logout")
