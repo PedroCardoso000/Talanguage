@@ -24,10 +24,12 @@ Inclui:
 - proteção de rotas privadas;
 - usuário autenticado disponível para o front-end;
 - tratamento básico de erros.
+- solicitação de recuperação de senha com resposta não enumerável;
+- redefinição de senha por token aleatório, de uso único e expiração curta.
 
 ## Fora de escopo da primeira versão
 - login social;
-- recuperação de senha completa;
+- provedor externo de e-mail para entrega do link de recuperação (integração pendente);
 - MFA/2FA;
 - perfis corporativos;
 - gestão avançada de permissões;
@@ -42,6 +44,8 @@ Inclui:
 5. Entra na plataforma.
 6. Acessa `/dashboard`.
 7. Pode sair via logout.
+8. Pode solicitar recuperação sem revelar se o e-mail existe.
+9. Pode redefinir a senha com token válido recebido pelo canal de notificação.
 
 ## Critério de pronto
 - telas existentes conectadas ao backend;
@@ -50,3 +54,4 @@ Inclui:
 - rotas privadas protegidas;
 - erros exibidos de forma clara;
 - testes principais criados.
+- tokens anteriores invalidados, token consumido após uso e sessões anteriores encerradas.

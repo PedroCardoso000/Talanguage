@@ -11,4 +11,6 @@ public interface SessionService {
     Optional<AuthenticatedSession> findByToken(String token);
 
     void invalidate(String token);
+
+    void invalidateAll(UserId userId);
 }

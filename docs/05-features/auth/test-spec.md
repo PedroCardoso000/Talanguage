@@ -21,6 +21,13 @@ Objetivo: orientar a transição de telas mockadas para funcionalidades reais, s
 - GET /api/auth/me retorna 200 autenticado;
 - GET /api/auth/me retorna 401 sem token;
 - e-mail duplicado retorna 409.
+- solicitação para e-mail existente e inexistente retorna exatamente a mesma resposta 202;
+- token válido redefine a senha;
+- token inválido, expirado ou usado retorna erro genérico;
+- token persistido não está em texto puro;
+- senha fraca é rejeitada;
+- senha e token não aparecem em respostas ou logs;
+- login funciona com a nova senha e falha com a anterior.
 
 ## Frontend tests
 - renderiza login;

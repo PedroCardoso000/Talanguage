@@ -78,6 +78,13 @@ public final class User {
         );
     }
 
+    public User changePassword(String newPasswordHash, Instant changedAt) {
+        return new User(
+                id, name, email, newPasswordHash, targetLanguage, currentLevel, studyGoal, avatarUrl,
+                createdAt, Objects.requireNonNull(changedAt, "Password change time is required.")
+        );
+    }
+
     private static String validateName(String value) {
         Objects.requireNonNull(value, "Name is required.");
         String normalized = value.trim();
