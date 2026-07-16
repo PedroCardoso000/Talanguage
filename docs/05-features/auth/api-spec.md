@@ -88,6 +88,46 @@ Encerra sessao quando aplicavel.
 
 Response 204.
 
+### POST /api/auth/forgot-password
+Solicita recuperação sem revelar se o e-mail existe.
+
+Autenticação: não requerida.
+
+Request:
+```json
+{
+  "email": "pedro@example.com"
+}
+```
+
+Response 202 (sempre para e-mail válido, cadastrado ou não):
+```json
+{
+  "message": "If the email is registered, password reset instructions will be sent."
+}
+```
+
+O token nunca é retornado. Solicitações repetidas podem ser suprimidas pela proteção contra abuso sem alterar a resposta.
+
+### POST /api/auth/reset-password
+Redefine a senha com token válido, não expirado e ainda não utilizado.
+
+Autenticação: não requerida.
+
+Request:
+```json
+{
+  "token": "opaque-token-received-by-notification",
+  "newPassword": "NewStrongPassword123"
+}
+```
+
+Response 204.
+
+Erros:
+- 400 `VALIDATION_ERROR` para senha fora da política;
+- 400 `PASSWORD_RESET_TOKEN_INVALID` para token inválido, expirado ou já usado, sem distinguir o motivo.
+
 ## Erros
 - 400 para dados invalidos;
 - 401 para credenciais invalidas;
@@ -97,3 +137,4 @@ Response 204.
 - Controller nao valida regra de negocio complexa.
 - DTO de entrada nao deve ser entidade.
 - Nunca retornar `passwordHash`.
+- Nunca retornar ou registrar token de recuperação, senha ou existência do e-mail.

@@ -57,6 +57,11 @@ public class JpaSessionService implements SessionService {
         userSessionJpaRepository.deleteById(token);
     }
 
+    @Override
+    public void invalidateAll(UserId userId) {
+        userSessionJpaRepository.deleteAllByUserId(userId.value());
+    }
+
     private String generateToken() {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
