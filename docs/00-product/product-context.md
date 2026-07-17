@@ -52,6 +52,7 @@ The first version must focus on:
 
 - English;
 - Spanish.
+- Franch.
 
 ## Initial Audience
 
