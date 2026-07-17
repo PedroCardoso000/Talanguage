@@ -9,10 +9,11 @@ public record AuthUserView(
         String targetLanguage,
         String currentLevel,
         String studyGoal,
-        String avatarUrl
+        String avatarUrl,
+        boolean onboardingCompleted
 ) {
 
-    public static AuthUserView from(User user) {
+    public static AuthUserView from(User user, boolean onboardingCompleted) {
         return new AuthUserView(
                 user.id().value(),
                 user.name(),
@@ -20,7 +21,12 @@ public record AuthUserView(
                 user.targetLanguage(),
                 user.currentLevel(),
                 user.studyGoal(),
-                user.avatarUrl()
+                user.avatarUrl(),
+                onboardingCompleted
         );
+    }
+
+    public static AuthUserView from(User user) {
+        return from(user, false);
     }
 }

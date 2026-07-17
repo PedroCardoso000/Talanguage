@@ -45,6 +45,11 @@ public class InMemorySessionService implements SessionService {
         sessionsByToken.remove(token);
     }
 
+    @Override
+    public void invalidateAll(UserId userId) {
+        sessionsByToken.entrySet().removeIf(entry -> entry.getValue().userId().equals(userId));
+    }
+
     public void clear() {
         sessionsByToken.clear();
     }

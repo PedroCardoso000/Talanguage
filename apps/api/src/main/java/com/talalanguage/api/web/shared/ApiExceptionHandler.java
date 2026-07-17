@@ -5,6 +5,7 @@ import com.talalanguage.api.application.community.exception.CommunityTargetNotFo
 import com.talalanguage.api.application.auth.exception.EmailAlreadyInUseException;
 import com.talalanguage.api.application.auth.exception.InvalidCredentialsException;
 import com.talalanguage.api.application.auth.exception.WeakPasswordException;
+import com.talalanguage.api.application.auth.exception.InvalidPasswordResetTokenException;
 import com.talalanguage.api.application.flashcards.exception.FlashcardNotFoundException;
 import com.talalanguage.api.application.mocktest.exception.MockTestAttemptNotFoundException;
 import com.talalanguage.api.application.mocktest.exception.MockTestNotFoundException;
@@ -50,6 +51,11 @@ public class ApiExceptionHandler {
     @ExceptionHandler({InvalidCredentialsException.class, AuthenticationRequiredException.class})
     public ResponseEntity<ApiErrorResponse> handleUnauthorized(RuntimeException exception) {
         return build(HttpStatus.UNAUTHORIZED, "UNAUTHORIZED", exception.getMessage(), List.of());
+    }
+
+    @ExceptionHandler(InvalidPasswordResetTokenException.class)
+    public ResponseEntity<ApiErrorResponse> handleInvalidPasswordResetToken(InvalidPasswordResetTokenException exception) {
+        return build(HttpStatus.BAD_REQUEST, "PASSWORD_RESET_TOKEN_INVALID", exception.getMessage(), List.of());
     }
 
     @ExceptionHandler(FlashcardNotFoundException.class)

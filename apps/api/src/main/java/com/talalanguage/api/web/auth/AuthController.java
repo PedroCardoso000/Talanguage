@@ -4,11 +4,16 @@ import com.talalanguage.api.application.auth.GetAuthenticatedUserUseCase;
 import com.talalanguage.api.application.auth.LoginUserUseCase;
 import com.talalanguage.api.application.auth.LogoutUserUseCase;
 import com.talalanguage.api.application.auth.RegisterUserUseCase;
+import com.talalanguage.api.application.auth.RequestPasswordResetUseCase;
+import com.talalanguage.api.application.auth.ResetPasswordUseCase;
 import com.talalanguage.api.application.auth.exception.AuthenticationRequiredException;
 import com.talalanguage.api.web.auth.dto.AuthSessionResponseDto;
-import com.talalanguage.api.web.auth.dto.AuthUserResponseDto;
+import com.talalanguage.api.web.auth.dto.AuthenticatedUserResponseDto;
 import com.talalanguage.api.web.auth.dto.LoginRequestDto;
 import com.talalanguage.api.web.auth.dto.RegisterRequestDto;
+import com.talalanguage.api.web.auth.dto.ForgotPasswordRequestDto;
+import com.talalanguage.api.web.auth.dto.ForgotPasswordResponseDto;
+import com.talalanguage.api.web.auth.dto.ResetPasswordRequestDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,17 +33,23 @@ public class AuthController {
     private final LoginUserUseCase loginUserUseCase;
     private final GetAuthenticatedUserUseCase getAuthenticatedUserUseCase;
     private final LogoutUserUseCase logoutUserUseCase;
+    private final RequestPasswordResetUseCase requestPasswordResetUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
 
     public AuthController(
             RegisterUserUseCase registerUserUseCase,
             LoginUserUseCase loginUserUseCase,
             GetAuthenticatedUserUseCase getAuthenticatedUserUseCase,
-            LogoutUserUseCase logoutUserUseCase
+            LogoutUserUseCase logoutUserUseCase,
+            RequestPasswordResetUseCase requestPasswordResetUseCase,
+            ResetPasswordUseCase resetPasswordUseCase
     ) {
         this.registerUserUseCase = registerUserUseCase;
         this.loginUserUseCase = loginUserUseCase;
         this.getAuthenticatedUserUseCase = getAuthenticatedUserUseCase;
         this.logoutUserUseCase = logoutUserUseCase;
+        this.requestPasswordResetUseCase = requestPasswordResetUseCase;
+        this.resetPasswordUseCase = resetPasswordUseCase;
     }
 
     @PostMapping("/register")
@@ -64,13 +75,13 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public AuthUserResponseDto me(Authentication authentication) {
+    public AuthenticatedUserResponseDto me(Authentication authentication) {
         if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
             throw new AuthenticationRequiredException();
         }
 
         var result = getAuthenticatedUserUseCase.execute(new GetAuthenticatedUserUseCase.Command(authentication.getName()));
-        return AuthUserResponseDto.from(result);
+        return AuthenticatedUserResponseDto.from(result);
     }
 
     @PostMapping("/logout")
@@ -81,5 +92,19 @@ public class AuthController {
         }
 
         logoutUserUseCase.execute(new LogoutUserUseCase.Command(authentication.getCredentials().toString()));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<ForgotPasswordResponseDto> forgotPassword(
+            @Valid @RequestBody ForgotPasswordRequestDto request) {
+        requestPasswordResetUseCase.execute(new RequestPasswordResetUseCase.Command(request.email()));
+        return ResponseEntity.accepted().body(new ForgotPasswordResponseDto(
+                "If the email is registered, password reset instructions will be sent."));
+    }
+
+    @PostMapping("/reset-password")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void resetPassword(@Valid @RequestBody ResetPasswordRequestDto request) {
+        resetPasswordUseCase.execute(new ResetPasswordUseCase.Command(request.token(), request.newPassword()));
     }
 }
