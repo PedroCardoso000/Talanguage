@@ -55,8 +55,23 @@ class GlobalSearchUseCaseTest {
     }
 
     @Test
+    void shouldApplyLimitOnlyAfterGlobalDeterministicOrdering() {
+        SearchableModuleSource modules = (query, sourceLimit) ->
+                List.of(result(SearchResultType.MODULE, "module", "Travel"));
+        SearchableFlashcardSource flashcards = (userId, query, sourceLimit) ->
+                List.of(result(SearchResultType.FLASHCARD, "flashcard", "Travel"));
+        GlobalSearchUseCase useCase = new GlobalSearchUseCase(modules, flashcards);
+
+        var result = useCase.execute(command("travel", null, 1));
+
+        assertEquals(List.of("module"), result.results().stream().map(SearchResult::id).toList());
+    }
+
+    @Test
     void shouldContinueWhenOneSourceIsUnavailable() {
-        SearchableModuleSource unavailable = (query, limit) -> { throw new IllegalStateException("offline"); };
+        SearchableModuleSource unavailable = (query, limit) -> {
+            throw new SearchSourceUnavailableException("MODULE", new IllegalStateException("offline"));
+        };
         SearchableFlashcardSource flashcards = (userId, query, limit) ->
                 List.of(result(SearchResultType.FLASHCARD, "safe", "Travel"));
         GlobalSearchUseCase useCase = new GlobalSearchUseCase(unavailable, flashcards);
@@ -64,6 +79,14 @@ class GlobalSearchUseCaseTest {
         var result = useCase.execute(command("travel", null, 10));
 
         assertEquals(List.of("safe"), result.results().stream().map(SearchResult::id).toList());
+    }
+
+    @Test
+    void shouldNotHideUnexpectedErrors() {
+        SearchableModuleSource broken = (query, limit) -> { throw new IllegalStateException("bug"); };
+        GlobalSearchUseCase useCase = new GlobalSearchUseCase(broken, NO_FLASHCARDS);
+
+        assertThrows(IllegalStateException.class, () -> useCase.execute(command("travel", null, 10)));
     }
 
     private GlobalSearchUseCase.Command command(String query, Set<SearchResultType> types, Integer limit) {

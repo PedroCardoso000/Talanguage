@@ -9,6 +9,8 @@
 - ranks exact title before prefix and partial content;
 - excludes missing and sensitive resources;
 - continues when one source is unavailable.
+- propagates an unexpected source error.
+- validates flashcard ownership, literal special characters, case-insensitive matching, limit, and candidate ordering against PostgreSQL via Testcontainers.
 
 ## API tests
 - authenticated valid search returns `200` and the normalized query;

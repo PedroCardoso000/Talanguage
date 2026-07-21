@@ -11,10 +11,14 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class GlobalSearchUseCase {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalSearchUseCase.class);
     public static final int DEFAULT_LIMIT = 10;
     public static final int MAX_LIMIT = 30;
 
@@ -45,10 +49,10 @@ public class GlobalSearchUseCase {
 
         List<SearchResult> results = new ArrayList<>();
         if (types.contains(SearchResultType.MODULE)) {
-            addAvailable(results, () -> moduleSource.search(query, limit));
+            addAvailable(results, () -> moduleSource.search(query, MAX_LIMIT));
         }
         if (types.contains(SearchResultType.FLASHCARD)) {
-            addAvailable(results, () -> flashcardSource.search(userId, query, limit));
+            addAvailable(results, () -> flashcardSource.search(userId, query, MAX_LIMIT));
         }
 
         return new Result(query, results.stream().sorted(RESULT_ORDER).limit(limit).toList());
@@ -60,8 +64,14 @@ public class GlobalSearchUseCase {
             if (sourceResults != null) {
                 target.addAll(sourceResults);
             }
-        } catch (RuntimeException unavailableSource) {
-            // One optional search source must not make the complete search unavailable.
+        } catch (SearchSourceUnavailableException unavailableSource) {
+            String correlationId = UUID.randomUUID().toString();
+            LOGGER.warn(
+                    "Search source unavailable source={} correlationId={} error={}",
+                    unavailableSource.source(),
+                    correlationId,
+                    unavailableSource.getCause().getClass().getSimpleName()
+            );
         }
     }
 
