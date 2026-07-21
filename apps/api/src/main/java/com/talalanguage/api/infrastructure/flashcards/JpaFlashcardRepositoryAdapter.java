@@ -1,20 +1,24 @@
 package com.talalanguage.api.infrastructure.flashcards;
 
 import com.talalanguage.api.application.flashcards.port.FlashcardRepository;
+import com.talalanguage.api.application.flashcards.port.SearchableFlashcardSource;
 import com.talalanguage.api.domain.auth.UserId;
 import com.talalanguage.api.domain.flashcards.Flashcard;
 import com.talalanguage.api.domain.flashcards.FlashcardLanguage;
+import com.talalanguage.api.domain.search.SearchResult;
+import com.talalanguage.api.domain.search.SearchResultType;
 import com.talalanguage.api.infrastructure.persistence.PersistenceJsonCodec;
 import com.talalanguage.api.infrastructure.persistence.entity.FlashcardEntity;
 import com.talalanguage.api.infrastructure.persistence.repository.FlashcardJpaRepository;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @Profile("!test")
-public class JpaFlashcardRepositoryAdapter implements FlashcardRepository {
+public class JpaFlashcardRepositoryAdapter implements FlashcardRepository, SearchableFlashcardSource {
 
     private final FlashcardJpaRepository flashcardJpaRepository;
     private final PersistenceJsonCodec persistenceJsonCodec;
@@ -49,6 +53,21 @@ public class JpaFlashcardRepositoryAdapter implements FlashcardRepository {
     @Override
     public void deleteByIdAndUserId(String flashcardId, UserId userId) {
         flashcardJpaRepository.deleteByIdAndUserId(flashcardId, userId.value());
+    }
+
+    @Override
+    public List<SearchResult> search(UserId userId, String query, int limit) {
+        return flashcardJpaRepository.searchByUserId(userId.value(), query, PageRequest.of(0, limit))
+                .stream()
+                .map(entity -> SearchResult.matching(
+                        SearchResultType.FLASHCARD,
+                        entity.getId(),
+                        entity.getFrontText(),
+                        entity.getBackText(),
+                        "/review",
+                        query
+                ))
+                .toList();
     }
 
     private FlashcardEntity toEntity(Flashcard flashcard) {
