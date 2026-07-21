@@ -124,7 +124,7 @@ class SearchControllerTest {
                         .header(HttpHeaders.AUTHORIZATION, bearer(token))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"front":"%s","back":"%s","language":"ENGLISH","tags":[]}
+                                {"front":"%s","back":"%s","language":"ENGLISH","tags":["search"]}
                                 """.formatted(front, back)))
                 .andExpect(status().isCreated());
     }
