@@ -2,6 +2,7 @@ package com.talalanguage.api.infrastructure.flashcards;
 
 import com.talalanguage.api.application.flashcards.port.FlashcardRepository;
 import com.talalanguage.api.application.flashcards.port.SearchableFlashcardSource;
+import com.talalanguage.api.application.search.SearchSourceUnavailableException;
 import com.talalanguage.api.domain.auth.UserId;
 import com.talalanguage.api.domain.flashcards.Flashcard;
 import com.talalanguage.api.domain.flashcards.FlashcardLanguage;
@@ -11,7 +12,9 @@ import com.talalanguage.api.infrastructure.persistence.PersistenceJsonCodec;
 import com.talalanguage.api.infrastructure.persistence.entity.FlashcardEntity;
 import com.talalanguage.api.infrastructure.persistence.repository.FlashcardJpaRepository;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import org.springframework.dao.DataAccessResourceFailureException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
@@ -57,17 +60,33 @@ public class JpaFlashcardRepositoryAdapter implements FlashcardRepository, Searc
 
     @Override
     public List<SearchResult> search(UserId userId, String query, int limit) {
-        return flashcardJpaRepository.searchByUserId(userId.value(), query, PageRequest.of(0, limit))
-                .stream()
-                .map(entity -> SearchResult.matching(
-                        SearchResultType.FLASHCARD,
-                        entity.getId(),
-                        entity.getFrontText(),
-                        entity.getBackText(),
-                        "/review",
-                        query
-                ))
-                .toList();
+        String normalizedQuery = query.toLowerCase(Locale.ROOT);
+        String escapedQuery = escapeLikePattern(normalizedQuery);
+        try {
+            return flashcardJpaRepository.searchByUserId(
+                            userId.value(),
+                            normalizedQuery,
+                            escapedQuery + "%",
+                            "%" + escapedQuery + "%",
+                            PageRequest.of(0, limit)
+                    )
+                    .stream()
+                    .map(entity -> SearchResult.matching(
+                            SearchResultType.FLASHCARD,
+                            entity.getId(),
+                            entity.getFrontText(),
+                            entity.getBackText(),
+                            "/review",
+                            query
+                    ))
+                    .toList();
+        } catch (DataAccessResourceFailureException unavailable) {
+            throw new SearchSourceUnavailableException("FLASHCARD", unavailable);
+        }
+    }
+
+    private String escapeLikePattern(String value) {
+        return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     private FlashcardEntity toEntity(Flashcard flashcard) {

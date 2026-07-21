@@ -1,7 +1,7 @@
 # Backend Spec — Global Search
 
 ## Use case
-- `GlobalSearchUseCase` validates and normalizes input, calls selected sources, tolerates an unavailable source, ranks the combined results, and applies the global limit.
+- `GlobalSearchUseCase` validates and normalizes input, calls selected sources, isolates only explicitly classified technical unavailability, ranks the combined results, and applies the global limit.
 
 ## Ports
 - `SearchableModuleSource` for the public backend module catalog;
@@ -21,4 +21,6 @@ Future searchable modules must implement their own application port. The global 
 - ignored: `COMMUNITY` because groups/partners are in-memory preview data and the current UI is explicitly blocked.
 
 ## Query strategy
-Candidate queries are bounded to the maximum API limit. Final order is score descending, then type, normalized title, and id for deterministic ties.
+Each enabled source returns at most the API maximum of 30 candidates after applying its relevance order; the requested response limit is applied only after global scoring. Literal `%`, `_`, and `\\` are escaped before `LIKE`; other characters, including Unicode and slashes, remain literal parameters. Final order is score descending, then type, normalized title, and id for deterministic ties.
+
+Unexpected exceptions, authentication failures, authorization failures, and programming errors propagate. Recoverable source unavailability is logged with source, correlation identifier, and exception type, without query or user data.

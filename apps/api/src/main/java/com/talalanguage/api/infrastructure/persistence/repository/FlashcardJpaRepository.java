@@ -21,14 +21,14 @@ public interface FlashcardJpaRepository extends JpaRepository<FlashcardEntity, S
             from FlashcardEntity flashcard
             where flashcard.userId = :userId
               and (
-                lower(flashcard.frontText) like lower(concat('%', :query, '%'))
-                or lower(flashcard.backText) like lower(concat('%', :query, '%'))
+                lower(flashcard.frontText) like :containsPattern escape '\\'
+                or lower(flashcard.backText) like :containsPattern escape '\\'
               )
             order by
               case
-                when lower(flashcard.frontText) = lower(:query) then 0
-                when lower(flashcard.frontText) like lower(concat(:query, '%')) then 1
-                when lower(flashcard.frontText) like lower(concat('%', :query, '%')) then 2
+                when lower(flashcard.frontText) = :normalizedQuery then 0
+                when lower(flashcard.frontText) like :prefixPattern escape '\\' then 1
+                when lower(flashcard.frontText) like :containsPattern escape '\\' then 2
                 else 3
               end,
               lower(flashcard.frontText),
@@ -36,7 +36,9 @@ public interface FlashcardJpaRepository extends JpaRepository<FlashcardEntity, S
             """)
     List<FlashcardEntity> searchByUserId(
             @Param("userId") String userId,
-            @Param("query") String query,
+            @Param("normalizedQuery") String normalizedQuery,
+            @Param("prefixPattern") String prefixPattern,
+            @Param("containsPattern") String containsPattern,
             Pageable pageable
     );
 }
