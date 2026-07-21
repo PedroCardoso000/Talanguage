@@ -21,6 +21,7 @@ Response 200:
 [
   {
     "id": "uuid",
+    "type": "WELCOME",
     "title": "Bem-vindo ao Tala",
     "message": "Seu treino comecou. Ajuste o perfil e mantenha consistencia diaria.",
     "actionRoute": "/profile",
@@ -38,6 +39,7 @@ Response 200:
 ```json
 {
   "id": "uuid",
+  "type": "WELCOME",
   "title": "Bem-vindo ao Tala",
   "message": "Seu treino comecou. Ajuste o perfil e mantenha consistencia diaria.",
   "actionRoute": "/profile",
@@ -55,3 +57,14 @@ Response 200:
 - contador do topbar deve ser derivado das notificacoes nao lidas;
 - nao ha tempo real nesta versao;
 - marcar como lida deve persistir no backend.
+
+## Politica de geracao e confiabilidade
+
+- `WELCOME` e gerada depois que o cadastro do usuario e persistido;
+- `ONBOARDING_COMPLETED` e gerada depois que o onboarding e persistido e e deduplicada por usuario;
+- `PROFILE_UPDATED` representa uma alteracao de perfil efetivamente persistida e repeticoes do mesmo estado sao deduplicadas;
+- `STREAK_LOST` e gerada somente quando uma nova atividade persistida confirma que a ultima atividade anterior ocorreu ha mais de um dia completo, comparando datas em UTC;
+- nao existe deteccao proativa de perda de streak: sem scheduler, nenhuma notificacao e criada apenas pela passagem do tempo;
+- nenhuma notificacao cuja ocorrencia nao possa ser confirmada por estado persistido e simulada;
+- a chave unica `(user_id, type, deduplication_key)` e a fonte de idempotencia, inclusive sob concorrencia;
+- notificacoes sao privadas: listagem e marcacao de leitura sempre usam o usuario autenticado como filtro.

@@ -15,7 +15,12 @@ const spaceGrotesk = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: "Talanguage",
-  description: "MVP front-end de uma plataforma SaaS para prática diária de idiomas.",
+  description: "Plataforma para prática diária de idiomas.",
+  icons: {
+    icon: "../public/icone-talanguage.png",
+    shortcut: "../public/icone-talanguage.png",
+    apple: "../public/icone-talanguage.png",
+  },
 };
 
 export default function RootLayout({

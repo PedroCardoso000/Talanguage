@@ -9,6 +9,8 @@ public final class Notification {
 
     private final String id;
     private final UserId userId;
+    private final NotificationType type;
+    private final String deduplicationKey;
     private final String title;
     private final String message;
     private final String actionRoute;
@@ -18,6 +20,8 @@ public final class Notification {
     private Notification(
             String id,
             UserId userId,
+            NotificationType type,
+            String deduplicationKey,
             String title,
             String message,
             String actionRoute,
@@ -26,6 +30,8 @@ public final class Notification {
     ) {
         this.id = requireText(id, "Notification id is required.");
         this.userId = Objects.requireNonNull(userId, "User id is required.");
+        this.type = Objects.requireNonNull(type, "Notification type is required.");
+        this.deduplicationKey = requireText(deduplicationKey, "Deduplication key is required.");
         this.title = requireText(title, "Notification title is required.");
         this.message = requireText(message, "Notification message is required.");
         this.actionRoute = normalizeRoute(actionRoute);
@@ -33,20 +39,24 @@ public final class Notification {
         this.readAt = readAt;
     }
 
-    public static Notification create(UserId userId, String title, String message, String actionRoute) {
-        return new Notification(UUID.randomUUID().toString(), userId, title, message, actionRoute, Instant.now(), null);
+    public static Notification create(UserId userId, NotificationType type, String deduplicationKey,
+            String title, String message, String actionRoute) {
+        return new Notification(UUID.randomUUID().toString(), userId, type, deduplicationKey,
+                title, message, actionRoute, Instant.now(), null);
     }
 
     public static Notification restore(
             String id,
             UserId userId,
+            NotificationType type,
+            String deduplicationKey,
             String title,
             String message,
             String actionRoute,
             Instant createdAt,
             Instant readAt
     ) {
-        return new Notification(id, userId, title, message, actionRoute, createdAt, readAt);
+        return new Notification(id, userId, type, deduplicationKey, title, message, actionRoute, createdAt, readAt);
     }
 
     public Notification markAsRead(Instant when) {
@@ -54,7 +64,8 @@ public final class Notification {
             return this;
         }
 
-        return new Notification(id, userId, title, message, actionRoute, createdAt, Objects.requireNonNull(when));
+        return new Notification(id, userId, type, deduplicationKey, title, message, actionRoute, createdAt,
+                Objects.requireNonNull(when));
     }
 
     private static String requireText(String value, String message) {
@@ -89,6 +100,14 @@ public final class Notification {
 
     public UserId userId() {
         return userId;
+    }
+
+    public NotificationType type() {
+        return type;
+    }
+
+    public String deduplicationKey() {
+        return deduplicationKey;
     }
 
     public String title() {

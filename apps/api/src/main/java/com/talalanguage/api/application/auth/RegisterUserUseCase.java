@@ -9,6 +9,7 @@ import com.talalanguage.api.application.auth.port.SessionService;
 import com.talalanguage.api.application.auth.port.UserRepository;
 import com.talalanguage.api.domain.auth.Email;
 import com.talalanguage.api.domain.auth.User;
+import com.talalanguage.api.domain.notifications.NotificationType;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -49,6 +50,8 @@ public class RegisterUserUseCase {
         userRepository.save(user);
         createNotificationUseCase.execute(new CreateNotificationUseCase.Command(
                 user.id().value(),
+                NotificationType.WELCOME,
+                "welcome",
                 "Bem-vindo ao Tala",
                 "Seu treino comecou. Ajuste o perfil e mantenha consistencia diaria.",
                 "/profile"

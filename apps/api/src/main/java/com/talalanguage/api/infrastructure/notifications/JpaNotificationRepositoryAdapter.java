@@ -7,6 +7,7 @@ import com.talalanguage.api.infrastructure.persistence.entity.NotificationEntity
 import com.talalanguage.api.infrastructure.persistence.repository.NotificationJpaRepository;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
@@ -22,8 +23,19 @@ public class JpaNotificationRepositoryAdapter implements NotificationRepository 
 
     @Override
     public Notification save(Notification notification) {
-        notificationJpaRepository.save(toEntity(notification));
-        return notification;
+        var existing = findByUserIdAndTypeAndDeduplicationKey(
+                notification.userId(), notification.type(), notification.deduplicationKey());
+        if (existing.isPresent() && !existing.get().id().equals(notification.id())) {
+            return existing.get();
+        }
+        try {
+            notificationJpaRepository.saveAndFlush(toEntity(notification));
+            return notification;
+        } catch (DataIntegrityViolationException exception) {
+            return findByUserIdAndTypeAndDeduplicationKey(
+                    notification.userId(), notification.type(), notification.deduplicationKey())
+                    .orElseThrow(() -> exception);
+        }
     }
 
     @Override
@@ -39,10 +51,22 @@ public class JpaNotificationRepositoryAdapter implements NotificationRepository 
         return notificationJpaRepository.findByIdAndUserId(id, userId.value()).map(this::toDomain);
     }
 
+    @Override
+    public Optional<Notification> findByUserIdAndTypeAndDeduplicationKey(
+            UserId userId,
+            com.talalanguage.api.domain.notifications.NotificationType type,
+            String deduplicationKey
+    ) {
+        return notificationJpaRepository.findByUserIdAndTypeAndDeduplicationKey(
+                userId.value(), type.name(), deduplicationKey).map(this::toDomain);
+    }
+
     private NotificationEntity toEntity(Notification notification) {
         return new NotificationEntity(
                 notification.id(),
                 notification.userId().value(),
+                notification.type().name(),
+                notification.deduplicationKey(),
                 notification.title(),
                 notification.message(),
                 notification.actionRoute(),
@@ -55,6 +79,8 @@ public class JpaNotificationRepositoryAdapter implements NotificationRepository 
         return Notification.restore(
                 entity.getId(),
                 UserId.from(entity.getUserId()),
+                com.talalanguage.api.domain.notifications.NotificationType.valueOf(entity.getType()),
+                entity.getDeduplicationKey(),
                 entity.getTitle(),
                 entity.getMessage(),
                 entity.getActionRoute(),

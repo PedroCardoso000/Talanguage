@@ -17,6 +17,12 @@ public class NotificationEntity {
     @Column(name = "user_id", nullable = false, length = 64)
     private String userId;
 
+    @Column(nullable = false, length = 32)
+    private String type;
+
+    @Column(name = "deduplication_key", nullable = false, length = 255)
+    private String deduplicationKey;
+
     @Column(nullable = false, length = 255)
     private String title;
 
@@ -38,6 +44,8 @@ public class NotificationEntity {
     public NotificationEntity(
             String id,
             String userId,
+            String type,
+            String deduplicationKey,
             String title,
             String message,
             String actionRoute,
@@ -46,6 +54,8 @@ public class NotificationEntity {
     ) {
         this.id = id;
         this.userId = userId;
+        this.type = type;
+        this.deduplicationKey = deduplicationKey;
         this.title = title;
         this.message = message;
         this.actionRoute = actionRoute;
@@ -59,6 +69,14 @@ public class NotificationEntity {
 
     public String getUserId() {
         return userId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getDeduplicationKey() {
+        return deduplicationKey;
     }
 
     public String getTitle() {

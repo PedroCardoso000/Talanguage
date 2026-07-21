@@ -42,7 +42,7 @@ class GetDashboardSummaryUseCaseTest {
                 null,
                 null,
                 CLOCK.instant(),
-                Instant.now()
+                CLOCK.instant()
         );
         userRepository.save(user);
         activityRepository.save(com.talalanguage.api.domain.progress.LearningActivity.create(
@@ -50,7 +50,7 @@ class GetDashboardSummaryUseCaseTest {
                 ActivityType.SPEAKING,
                 SkillType.SPEAKING,
                 78,
-                Instant.now(),
+                CLOCK.instant(),
                 "speak-1"
         ));
 
@@ -85,8 +85,8 @@ class GetDashboardSummaryUseCaseTest {
                 null,
                 null,
                 null,
-                Instant.now(),
-                Instant.now()
+                CLOCK.instant(),
+                CLOCK.instant()
         );
         userRepository.save(user);
 

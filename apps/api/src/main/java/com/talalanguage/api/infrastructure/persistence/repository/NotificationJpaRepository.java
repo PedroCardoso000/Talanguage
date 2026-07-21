@@ -10,4 +10,10 @@ public interface NotificationJpaRepository extends JpaRepository<NotificationEnt
     List<NotificationEntity> findByUserIdOrderByCreatedAtDesc(String userId);
 
     Optional<NotificationEntity> findByIdAndUserId(String id, String userId);
+
+    Optional<NotificationEntity> findByUserIdAndTypeAndDeduplicationKey(
+            String userId,
+            String type,
+            String deduplicationKey
+    );
 }

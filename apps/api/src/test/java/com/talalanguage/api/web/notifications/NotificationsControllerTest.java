@@ -83,17 +83,44 @@ class NotificationsControllerTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void shouldIsolateNotificationsBetweenUsers() throws Exception {
+        String firstToken = registerAndAuthenticate("first@example.com");
+        MvcResult firstList = mockMvc.perform(get("/api/notifications")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + firstToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andReturn();
+        String firstNotificationId = objectMapper.readTree(
+                firstList.getResponse().getContentAsString()).get(0).get("id").asText();
+
+        String secondToken = registerAndAuthenticate("second@example.com");
+        mockMvc.perform(get("/api/notifications")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + secondToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value(org.hamcrest.Matchers.not(firstNotificationId)));
+
+        mockMvc.perform(patch("/api/notifications/" + firstNotificationId + "/read")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + secondToken))
+                .andExpect(status().isNotFound());
+    }
+
     private String registerAndAuthenticate() throws Exception {
+        return registerAndAuthenticate("pedro@example.com");
+    }
+
+    private String registerAndAuthenticate(String email) throws Exception {
         MvcResult registerResult = mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "name": "Pedro Cardoso",
-                                  "email": "pedro@example.com",
+                                  "email": "%s",
                                   "password": "StrongPassword123",
                                   "targetLanguage": "ENGLISH"
                                 }
-                                """))
+                                """.formatted(email)))
                 .andExpect(status().isCreated())
                 .andReturn();
 

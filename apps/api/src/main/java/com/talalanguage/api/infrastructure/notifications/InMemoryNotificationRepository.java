@@ -17,7 +17,12 @@ public class InMemoryNotificationRepository implements NotificationRepository {
     private final Map<String, Notification> notificationsById = new ConcurrentHashMap<>();
 
     @Override
-    public Notification save(Notification notification) {
+    public synchronized Notification save(Notification notification) {
+        var existing = findByUserIdAndTypeAndDeduplicationKey(
+                notification.userId(), notification.type(), notification.deduplicationKey());
+        if (existing.isPresent() && !existing.get().id().equals(notification.id())) {
+            return existing.get();
+        }
         notificationsById.put(notification.id(), notification);
         return notification;
     }
@@ -33,6 +38,19 @@ public class InMemoryNotificationRepository implements NotificationRepository {
     public Optional<Notification> findByIdAndUserId(String id, UserId userId) {
         return Optional.ofNullable(notificationsById.get(id))
                 .filter(notification -> notification.userId().equals(userId));
+    }
+
+    @Override
+    public Optional<Notification> findByUserIdAndTypeAndDeduplicationKey(
+            UserId userId,
+            com.talalanguage.api.domain.notifications.NotificationType type,
+            String deduplicationKey
+    ) {
+        return notificationsById.values().stream()
+                .filter(notification -> notification.userId().equals(userId))
+                .filter(notification -> notification.type() == type)
+                .filter(notification -> notification.deduplicationKey().equals(deduplicationKey))
+                .findFirst();
     }
 
     public void clear() {
