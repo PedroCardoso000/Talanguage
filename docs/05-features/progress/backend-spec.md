@@ -24,9 +24,15 @@ Objetivo: orientar a transicao de telas mockadas para funcionalidades reais, sem
 - dashboard pode reutilizar read service de progresso;
 - evitar calculo duplicado no front-end;
 - `summary` deve expor contadores agregados reais por tipo de atividade;
-- `weekly-summary` deve considerar apenas a janela semanal corrente.
+- `weekly-summary` deve considerar apenas a janela semanal corrente;
+- `currentStreak` e `longestStreak` devem ser derivados no backend a partir dos dias distintos com atividade;
+- sem atividade hoje, a sequência encerrada ontem permanece com o mesmo valor;
+- um dia UTC completo sem atividade quebra a sequência;
+- dashboard e progress devem reutilizar o mesmo `ProgressCalculator` para streak;
+- registro de atividade deve ser idempotente e protegido por unicidade de `userId`, `type` e `sourceId`.
 
 ## Infraestrutura
 - persistencia de atividades;
 - query service para resumos;
-- indices por `userId` e `completedAt` quando houver banco.
+- indices por `userId` e `completedAt` quando houver banco;
+- índice único por `userId`, `type` e `sourceId` para segurança sob concorrência.

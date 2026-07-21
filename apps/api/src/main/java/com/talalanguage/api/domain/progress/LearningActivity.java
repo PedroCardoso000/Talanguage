@@ -30,7 +30,7 @@ public final class LearningActivity {
         this.skill = Objects.requireNonNull(skill, "Skill type is required.");
         this.score = validateScore(score);
         this.completedAt = Objects.requireNonNull(completedAt, "Completed at is required.");
-        this.sourceId = sourceId == null ? null : sourceId.trim();
+        this.sourceId = requireText(sourceId, "Activity source id is required.");
     }
 
     public static LearningActivity create(

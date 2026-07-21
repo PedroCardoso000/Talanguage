@@ -46,6 +46,9 @@ Campos:
 4. Feedback deve conter pelo menos resumo e sugestões.
 5. Revisão concluída gera atividade de aprendizagem.
 
+6. O texto submetido, a correção e o feedback pertencem ao mesmo usuário e formam seu histórico privado.
+7. O conteúdo persistido não pode ser retornado a outro usuário nem exposto em logs.
+
 ## Eventos
 - WritingSubmissionCreated;
 - WritingSubmissionReviewed.

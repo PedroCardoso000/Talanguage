@@ -20,8 +20,9 @@ class ReviewFlashcardUseCaseTest {
     void shouldReviewFlashcardAndRecalculateSchedule() {
         InMemoryFlashcardRepository flashcardRepository = new InMemoryFlashcardRepository();
         InMemoryFlashcardStatsRepository statsRepository = new InMemoryFlashcardStatsRepository();
+        var activityRepository = new com.talalanguage.api.infrastructure.progress.InMemoryLearningActivityRepository();
         RegisterLearningActivityUseCase registerLearningActivityUseCase = new RegisterLearningActivityUseCase(
-                new com.talalanguage.api.infrastructure.progress.InMemoryLearningActivityRepository()
+                activityRepository
         );
         ReviewFlashcardUseCase useCase = new ReviewFlashcardUseCase(
                 flashcardRepository,
@@ -41,9 +42,12 @@ class ReviewFlashcardUseCaseTest {
         ));
 
         var result = useCase.execute(new ReviewFlashcardUseCase.Command(userId.value(), flashcard.id(), ReviewRating.GOOD));
+        var secondResult = useCase.execute(new ReviewFlashcardUseCase.Command(userId.value(), flashcard.id(), ReviewRating.EASY));
 
         assertEquals(flashcard.id(), result.id());
         assertEquals(1, result.reviewCount());
+        assertEquals(2, secondResult.reviewCount());
+        assertEquals(2, activityRepository.findByUserId(userId).size());
     }
 
     @Test

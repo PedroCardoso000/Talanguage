@@ -57,7 +57,7 @@ public class ReviewFlashcardUseCase {
                     case EASY -> 90;
                 },
                 Instant.now(),
-                reviewedFlashcard.id()
+                reviewedFlashcard.id() + ":review:" + reviewedFlashcard.reviewCount()
         ));
 
         return FlashcardReviewView.from(reviewedFlashcard);

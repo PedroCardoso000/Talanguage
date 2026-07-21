@@ -14,11 +14,20 @@ Objetivo: orientar a transição de telas mockadas para funcionalidades reais, s
 - retorna estado inicial para usuário novo;
 - não mistura atividades de usuários.
 
+- primeira atividade inicia streak em 1;
+- múltiplas atividades no mesmo dia não incrementam streak;
+- atividade no dia seguinte incrementa streak;
+- sem atividade hoje preserva a sequência de ontem sem incrementar;
+- dia completo perdido quebra current streak e preserva longest streak;
+- fronteira UTC não muda o dia conforme timezone do host;
+- registro repetido da mesma origem permanece único sob concorrência.
+
 ## API tests
 - GET /summary retorna 200;
 - GET /activities retorna 200;
 - GET /weekly-summary retorna 200;
 - sem auth retorna 401.
+- dashboard e progress retornam o mesmo streak.
 
 ## Frontend tests
 - renderiza resumo;

@@ -92,7 +92,9 @@ Do not add audit complexity where it does not help the first version.
 
 Avoid storing unnecessary sensitive data.
 
-Do not store raw AI prompts, user conversations or writing submissions without explicit product and privacy decision.
+Raw learner writing and text-based speaking conversations may be stored only under the explicit product and privacy decision in `docs/09-adr/002-private-practice-content-persistence.md`.
+
+Practice content must be treated as private learning content and must not be written to application, access, error or observability logs.
 
 If stored, document:
 
@@ -100,6 +102,8 @@ If stored, document:
 - retention policy;
 - access rules;
 - deletion behavior.
+
+Do not implement expanded practice-content persistence while retention, user deletion, account deletion, model-training use, external AI sharing and security measures remain undecided in the governing ADR.
 
 ## Soft Delete
 

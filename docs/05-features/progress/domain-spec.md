@@ -54,6 +54,11 @@ Campos:
 4. Meta diária depende da quantidade de atividades concluídas.
 5. Progresso deve ser derivado de eventos/atividades, não input manual solto.
 
+6. O dia de aprendizagem usa UTC na primeira versão, enquanto o perfil não possuir timezone configurável.
+7. Uma atividade concluída conta no máximo uma vez no streak por dia, independentemente do volume no mesmo dia.
+8. `sourceId` identifica a conclusão na origem e torna seu registro idempotente por usuário e tipo.
+9. Atividades canceladas, incompletas ou que falharam na validação não geram `LearningActivity`.
+
 ## Eventos
 - LearningActivityRegistered;
 - DailyGoalCompleted;

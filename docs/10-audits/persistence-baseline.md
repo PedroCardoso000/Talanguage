@@ -1,5 +1,9 @@
 # Persistence Baseline
 
+## Status
+
+Partially superseded by `docs/09-adr/002-private-practice-content-persistence.md` for Write and text-based Speak content.
+
 ## Scope
 
 This note records the persistence decision applied during stabilization prompt `036`.
@@ -18,7 +22,7 @@ The backend persistence baseline now targets only safe data for first-version st
 - writing metrics
 - speaking metrics
 
-## Explicitly Not Persisted In First Version
+## Original First-Version Restriction
 
 Until there is an explicit product, privacy and LGPD decision, the application must not durably persist:
 
@@ -27,7 +31,9 @@ Until there is an explicit product, privacy and LGPD decision, the application m
 - complete conversation transcripts
 - user-authored prompts
 
-## Writing Retention Rule
+That decision now exists for learner writing and text-based speaking history. The sections below describe the original metric-only implementation, not the target policy. Audio and transcription retention remain undecided.
+
+## Original Writing Retention Rule
 
 For writing, the backend may persist only aggregate metadata such as:
 
@@ -44,7 +50,7 @@ For writing, the backend may persist only aggregate metadata such as:
 
 Recent submission responses may expose a redacted placeholder instead of original content.
 
-## Speaking Retention Rule
+## Original Speaking Retention Rule
 
 For speaking, the backend may persist only aggregate metadata such as:
 

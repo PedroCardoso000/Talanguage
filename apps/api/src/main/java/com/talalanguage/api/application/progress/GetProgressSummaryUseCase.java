@@ -5,8 +5,8 @@ import com.talalanguage.api.application.progress.port.DailyGoalRepository;
 import com.talalanguage.api.application.progress.port.LearningActivityRepository;
 import com.talalanguage.api.application.progress.port.ProgressCalculator;
 import com.talalanguage.api.domain.auth.UserId;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
+import com.talalanguage.api.domain.progress.LearningDayPolicy;
+import java.time.Clock;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,15 +15,18 @@ public class GetProgressSummaryUseCase {
     private final LearningActivityRepository learningActivityRepository;
     private final DailyGoalRepository dailyGoalRepository;
     private final ProgressCalculator progressCalculator;
+    private final Clock clock;
 
     public GetProgressSummaryUseCase(
             LearningActivityRepository learningActivityRepository,
             DailyGoalRepository dailyGoalRepository,
-            ProgressCalculator progressCalculator
+            ProgressCalculator progressCalculator,
+            Clock clock
     ) {
         this.learningActivityRepository = learningActivityRepository;
         this.dailyGoalRepository = dailyGoalRepository;
         this.progressCalculator = progressCalculator;
+        this.clock = clock;
     }
 
     public ProgressSummaryView execute(Command command) {
@@ -31,7 +34,7 @@ public class GetProgressSummaryUseCase {
         return progressCalculator.calculateSummary(
                 userId,
                 learningActivityRepository.findByUserId(userId),
-                dailyGoalRepository.getForDate(userId, LocalDate.now(ZoneOffset.UTC))
+                dailyGoalRepository.getForDate(userId, LearningDayPolicy.today(clock))
         );
     }
 

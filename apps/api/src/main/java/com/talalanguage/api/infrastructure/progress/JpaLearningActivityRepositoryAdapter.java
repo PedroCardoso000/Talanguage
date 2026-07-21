@@ -9,6 +9,7 @@ import com.talalanguage.api.infrastructure.persistence.entity.LearningActivityEn
 import com.talalanguage.api.infrastructure.persistence.repository.LearningActivityJpaRepository;
 import java.time.Instant;
 import java.util.List;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
@@ -24,8 +25,21 @@ public class JpaLearningActivityRepositoryAdapter implements LearningActivityRep
 
     @Override
     public LearningActivity save(LearningActivity activity) {
-        learningActivityJpaRepository.save(toEntity(activity));
-        return activity;
+        var existing = findBySource(activity);
+        if (existing != null) {
+            return existing;
+        }
+
+        try {
+            learningActivityJpaRepository.saveAndFlush(toEntity(activity));
+            return activity;
+        } catch (DataIntegrityViolationException exception) {
+            LearningActivity concurrentWinner = findBySource(activity);
+            if (concurrentWinner != null) {
+                return concurrentWinner;
+            }
+            throw exception;
+        }
     }
 
     @Override
@@ -58,6 +72,16 @@ public class JpaLearningActivityRepositoryAdapter implements LearningActivityRep
                 activity.completedAt(),
                 activity.sourceId()
         );
+    }
+
+    private LearningActivity findBySource(LearningActivity activity) {
+        return learningActivityJpaRepository.findByUserIdAndTypeAndSourceId(
+                        activity.userId().value(),
+                        activity.type().name(),
+                        activity.sourceId()
+                )
+                .map(this::toDomain)
+                .orElse(null);
     }
 
     private LearningActivity toDomain(LearningActivityEntity entity) {

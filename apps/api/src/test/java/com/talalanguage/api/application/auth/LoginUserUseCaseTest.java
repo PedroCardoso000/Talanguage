@@ -118,5 +118,9 @@ class LoginUserUseCaseTest {
         @Override
         public void invalidate(String token) {
         }
+
+        @Override
+        public void invalidateAll(UserId userId) {
+        }
     }
 }

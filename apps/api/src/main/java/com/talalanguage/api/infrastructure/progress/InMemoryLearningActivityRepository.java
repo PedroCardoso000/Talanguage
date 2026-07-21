@@ -17,7 +17,15 @@ public class InMemoryLearningActivityRepository implements LearningActivityRepos
     private final CopyOnWriteArrayList<LearningActivity> activities = new CopyOnWriteArrayList<>();
 
     @Override
-    public LearningActivity save(LearningActivity activity) {
+    public synchronized LearningActivity save(LearningActivity activity) {
+        var existing = activities.stream()
+                .filter(candidate -> candidate.userId().equals(activity.userId()))
+                .filter(candidate -> candidate.type() == activity.type())
+                .filter(candidate -> candidate.sourceId().equals(activity.sourceId()))
+                .findFirst();
+        if (existing.isPresent()) {
+            return existing.get();
+        }
         activities.add(activity);
         return activity;
     }

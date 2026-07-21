@@ -45,6 +45,10 @@ Campos:
 4. Sessão finalizada não pode receber novas respostas.
 5. Sessão finalizada deve gerar atividade de aprendizagem.
 
+6. Em Speak por texto, mensagens do usuário e respostas exibidas pelo sistema ou IA compõem o histórico privado da sessão.
+7. O conteúdo persistido não pode ser retornado a outro usuário nem exposto em logs.
+8. A política de áudio e transcrição permanece pendente de decisão explícita.
+
 ## Eventos de domínio
 - SpeakingSessionStarted;
 - SpeakingResponseSubmitted;

@@ -55,6 +55,8 @@ A learner must not access another learner's private learning data.
 - Audio, transcription, pronunciation scoring, and WebRTC are not part of the default first version unless explicitly approved.
 - Feedback may be simulated or AI-assisted, but the UI must not present it as certified evaluation.
 
+Text-based speaking history may retain learner messages, system or AI replies, feedback and metrics so the learner can revisit the session. Persisted speaking content is private and access must be restricted to its learner owner.
+
 ## Writing Rules
 
 - A writing challenge must have a language and level.
@@ -63,6 +65,8 @@ A learner must not access another learner's private learning data.
 - Feedback must reference the exact submitted answer.
 - If the learner revises an answer, the revision must be treated explicitly, not silently overwrite evaluated content.
 - Feedback must be constructive and should include summary and improvement points.
+
+Writing history may retain the submitted text, corrected response, feedback, score and activity date so the learner can revisit previous work. Persisted writing content is private and access must be restricted to its learner owner.
 
 ## Flashcard Rules
 

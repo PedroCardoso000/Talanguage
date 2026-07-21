@@ -9,8 +9,9 @@ import com.talalanguage.api.domain.auth.User;
 import com.talalanguage.api.domain.auth.UserId;
 import com.talalanguage.api.domain.progress.ActivityType;
 import com.talalanguage.api.domain.progress.LearningActivity;
+import com.talalanguage.api.domain.progress.LearningDayPolicy;
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +24,20 @@ public class GetDashboardSummaryUseCase {
     private final LearningActivityRepository learningActivityRepository;
     private final DailyGoalRepository dailyGoalRepository;
     private final ProgressCalculator progressCalculator;
+    private final Clock clock;
 
     public GetDashboardSummaryUseCase(
             UserRepository userRepository,
             LearningActivityRepository learningActivityRepository,
             DailyGoalRepository dailyGoalRepository,
-            ProgressCalculator progressCalculator
+            ProgressCalculator progressCalculator,
+            Clock clock
     ) {
         this.userRepository = userRepository;
         this.learningActivityRepository = learningActivityRepository;
         this.dailyGoalRepository = dailyGoalRepository;
         this.progressCalculator = progressCalculator;
+        this.clock = clock;
     }
 
     public DashboardSummaryView execute(Command command) {
@@ -44,10 +48,10 @@ public class GetDashboardSummaryUseCase {
         var summary = progressCalculator.calculateSummary(
                 userId,
                 activities,
-                dailyGoalRepository.getForDate(userId, LocalDate.now(ZoneOffset.UTC))
+                dailyGoalRepository.getForDate(userId, LearningDayPolicy.today(clock))
         );
         List<Integer> weeklyActivity = buildWeeklyActivity(activities);
-        int completedActivitiesToday = countActivitiesForDate(activities, LocalDate.now(ZoneOffset.UTC));
+        int completedActivitiesToday = countActivitiesForDate(activities, LearningDayPolicy.today(clock));
 
         return new DashboardSummaryView(
                 user.name(),
@@ -68,7 +72,7 @@ public class GetDashboardSummaryUseCase {
     }
 
     private List<Integer> buildWeeklyActivity(List<LearningActivity> activities) {
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LearningDayPolicy.today(clock);
 
         return java.util.stream.IntStream.rangeClosed(0, 6)
                 .mapToObj(offset -> countActivitiesForDate(activities, today.minusDays(6L - offset)))
@@ -77,7 +81,7 @@ public class GetDashboardSummaryUseCase {
 
     private int countActivitiesForDate(List<LearningActivity> activities, LocalDate date) {
         return (int) activities.stream()
-                .filter(activity -> activity.completedAt().atZone(ZoneOffset.UTC).toLocalDate().equals(date))
+                .filter(activity -> LearningDayPolicy.dateOf(activity.completedAt()).equals(date))
                 .count();
     }
 

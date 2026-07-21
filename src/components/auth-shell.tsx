@@ -23,9 +23,9 @@ export function AuthShell({
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(66,209,255,0.18),transparent_30%),radial-gradient(circle_at_bottom_center,rgba(35,118,255,0.2),transparent_28%),linear-gradient(180deg,#040817,#071127_65%,#06101f)]" />
       <div className="absolute inset-x-0 bottom-[-10%] h-[36rem] rounded-full bg-[radial-gradient(circle,rgba(85,249,241,0.16),transparent_55%)] blur-3xl" />
       <div className="relative mx-auto grid min-h-screen max-w-7xl gap-12 px-6 py-8 lg:grid-cols-[1.1fr_0.9fr] lg:px-10">
-        <section className="flex flex-col justify-between py-6">
+        <section className="flex flex-col gap-6 py-12 lg:py-24">
           <Logo />
-          <div className="max-w-2xl space-y-2">
+          <div className="max-w-2xl space-y-4">
             <span className="inline-flex rounded-full border border-cyan-400/25 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">
               {authMarketingBadge}
             </span>

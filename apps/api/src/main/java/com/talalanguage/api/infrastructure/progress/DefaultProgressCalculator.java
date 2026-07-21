@@ -10,9 +10,10 @@ import com.talalanguage.api.domain.progress.ActivityType;
 import com.talalanguage.api.domain.auth.UserId;
 import com.talalanguage.api.domain.progress.DailyGoal;
 import com.talalanguage.api.domain.progress.LearningActivity;
+import com.talalanguage.api.domain.progress.LearningDayPolicy;
 import com.talalanguage.api.domain.progress.SkillType;
+import java.time.Clock;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -22,12 +23,18 @@ import org.springframework.stereotype.Component;
 @Component
 public class DefaultProgressCalculator implements ProgressCalculator {
 
+    private final Clock clock;
+
+    public DefaultProgressCalculator(Clock clock) {
+        this.clock = clock;
+    }
+
     @Override
     public ProgressSummaryView calculateSummary(UserId userId, List<LearningActivity> activities, DailyGoal dailyGoal) {
         List<LearningActivity> userActivities = sortAndFilter(userId, activities);
         Set<LocalDate> activeDays = toActiveDays(userActivities);
         int completedToday = (int) userActivities.stream()
-                .filter(activity -> activity.completedAt().atZone(ZoneOffset.UTC).toLocalDate().equals(dailyGoal.date()))
+                .filter(activity -> LearningDayPolicy.dateOf(activity.completedAt()).equals(dailyGoal.date()))
                 .count();
 
         return new ProgressSummaryView(
@@ -45,11 +52,11 @@ public class DefaultProgressCalculator implements ProgressCalculator {
     public WeeklyProgressSummaryView calculateWeeklySummary(UserId userId, List<LearningActivity> activities) {
         List<LearningActivity> userActivities = sortAndFilter(userId, activities);
         Set<LocalDate> activeDays = toActiveDays(userActivities);
-        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        LocalDate today = LearningDayPolicy.today(clock);
         LocalDate weekStart = today.minusDays(6);
         List<LearningActivity> weeklyActivities = userActivities.stream()
                 .filter(activity -> {
-                    LocalDate activityDate = activity.completedAt().atZone(ZoneOffset.UTC).toLocalDate();
+                    LocalDate activityDate = LearningDayPolicy.dateOf(activity.completedAt());
                     return !activityDate.isBefore(weekStart) && !activityDate.isAfter(today);
                 })
                 .toList();
@@ -109,7 +116,7 @@ public class DefaultProgressCalculator implements ProgressCalculator {
 
     private Set<LocalDate> toActiveDays(List<LearningActivity> activities) {
         return activities.stream()
-                .map(activity -> activity.completedAt().atZone(ZoneOffset.UTC).toLocalDate())
+                .map(activity -> LearningDayPolicy.dateOf(activity.completedAt()))
                 .collect(java.util.stream.Collectors.toSet());
     }
 
@@ -135,7 +142,7 @@ public class DefaultProgressCalculator implements ProgressCalculator {
 
     private int countActivitiesForDate(List<LearningActivity> activities, LocalDate date) {
         return (int) activities.stream()
-                .filter(activity -> activity.completedAt().atZone(ZoneOffset.UTC).toLocalDate().equals(date))
+                .filter(activity -> LearningDayPolicy.dateOf(activity.completedAt()).equals(date))
                 .count();
     }
 
@@ -149,7 +156,7 @@ public class DefaultProgressCalculator implements ProgressCalculator {
             return 0;
         }
 
-        LocalDate yesterday = LocalDate.now(ZoneOffset.UTC).minusDays(1);
+        LocalDate yesterday = LearningDayPolicy.today(clock).minusDays(1);
         if (latestActivityDay.isBefore(yesterday)) {
             return 0;
         }

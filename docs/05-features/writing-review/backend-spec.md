@@ -24,6 +24,11 @@ Objetivo: orientar a transição de telas mockadas para funcionalidades reais, s
 - integração real com IA deve ficar atrás de provider;
 - submissão revisada registra atividade.
 
+- persistir o texto submetido, eventual resposta corrigida, feedback, score e timestamps necessários ao histórico funcional;
+- toda consulta de histórico deve filtrar e autorizar pelo proprietário autenticado;
+- conteúdo de escrita não pode aparecer em logs;
+- retenção, exclusão, uso para treinamento e compartilhamento com IA seguem o ADR de persistência de conteúdo privado.
+
 ## Proibido
 - validação pesada no front-end como regra única;
 - feedback fake dentro da tela;

@@ -2,122 +2,169 @@ package com.talalanguage.api.application.progress;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.talalanguage.api.application.progress.model.ProgressSummaryView;
 import com.talalanguage.api.domain.auth.UserId;
 import com.talalanguage.api.domain.progress.ActivityType;
 import com.talalanguage.api.domain.progress.DailyGoal;
 import com.talalanguage.api.domain.progress.LearningActivity;
 import com.talalanguage.api.domain.progress.SkillType;
 import com.talalanguage.api.infrastructure.progress.DefaultProgressCalculator;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class DefaultProgressCalculatorTest {
 
-    private final DefaultProgressCalculator calculator = new DefaultProgressCalculator();
+    private static final Instant NOW = Instant.parse("2026-07-17T12:00:00Z");
+    private static final LocalDate TODAY = LocalDate.parse("2026-07-17");
+    private final DefaultProgressCalculator calculator = new DefaultProgressCalculator(
+            Clock.fixed(NOW, ZoneId.of("America/Fortaleza"))
+    );
 
     @Test
     void shouldReturnInitialStateForNewUser() {
         UserId userId = UserId.create();
 
-        var summary = calculator.calculateSummary(
-                userId,
-                List.of(),
-                new DailyGoal("goal-1", userId, 3, LocalDate.now(ZoneOffset.UTC))
-        );
+        var summary = calculate(userId, List.of());
 
         assertEquals(0, summary.streakDays());
         assertEquals(0, summary.longestStreakDays());
         assertEquals(null, summary.lastActivityDate());
         assertEquals(0, summary.totalActivities());
         assertEquals("NOT_STARTED", summary.dailyGoal().status());
-        assertEquals(0, summary.skillProgress().speaking());
     }
 
     @Test
-    void shouldCalculateStreakAndDailyGoal() {
+    void shouldStartStreakAtOneOnFirstActivity() {
         UserId userId = UserId.create();
-        Instant now = Instant.now();
 
-        List<LearningActivity> activities = List.of(
-                LearningActivity.restore("1", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 70, now.minusSeconds(3600), "s1"),
-                LearningActivity.restore("2", userId, ActivityType.WRITING, SkillType.WRITING, 80, now.minusSeconds(86400), "w1")
-        );
+        var summary = calculate(userId, List.of(activity("1", userId, "2026-07-17T08:00:00Z", "s1")));
 
-        var summary = calculator.calculateSummary(
-                userId,
-                activities,
-                new DailyGoal("goal-1", userId, 3, LocalDate.now(ZoneOffset.UTC))
-        );
+        assertEquals(1, summary.streakDays());
+        assertEquals(1, summary.longestStreakDays());
+    }
+
+    @Test
+    void shouldCountSeveralActivitiesOnSameDayOnlyOnceForStreak() {
+        UserId userId = UserId.create();
+
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-17T08:00:00Z", "s1"),
+                activity("2", userId, "2026-07-17T20:00:00Z", "s2")
+        ));
+
+        assertEquals(1, summary.streakDays());
+        assertEquals(2, summary.dailyGoal().completed());
+    }
+
+    @Test
+    void shouldIncrementStreakOnFollowingDay() {
+        UserId userId = UserId.create();
+
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-16T12:00:00Z", "s1"),
+                activity("2", userId, "2026-07-17T12:00:00Z", "s2")
+        ));
 
         assertEquals(2, summary.streakDays());
-        assertEquals(2, summary.longestStreakDays());
-        assertEquals(1, summary.dailyGoal().completed());
-        assertEquals("IN_PROGRESS", summary.dailyGoal().status());
     }
 
     @Test
-    void shouldCalculateSkillProgress() {
+    void shouldKeepYesterdayStreakWithoutIncrementWhenTodayHasNoActivity() {
         UserId userId = UserId.create();
-        Instant now = Instant.now();
 
-        List<LearningActivity> activities = List.of(
-                LearningActivity.restore("1", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 60, now, "s1"),
-                LearningActivity.restore("2", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 80, now, "s2"),
-                LearningActivity.restore("3", userId, ActivityType.FLASHCARDS, SkillType.VOCABULARY, 90, now, "f1")
-        );
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-15T12:00:00Z", "s1"),
+                activity("2", userId, "2026-07-16T12:00:00Z", "s2")
+        ));
 
-        var summary = calculator.calculateSummary(
-                userId,
-                activities,
-                new DailyGoal("goal-1", userId, 3, LocalDate.now(ZoneOffset.UTC))
-        );
+        assertEquals(2, summary.streakDays());
+    }
 
-        assertEquals(70, summary.skillProgress().speaking());
-        assertEquals(90, summary.skillProgress().vocabulary());
+    @Test
+    void shouldBreakCurrentStreakAfterMissingFullDayButPreserveLongest() {
+        UserId userId = UserId.create();
+
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-13T12:00:00Z", "s1"),
+                activity("2", userId, "2026-07-14T12:00:00Z", "s2")
+        ));
+
+        assertEquals(0, summary.streakDays());
+        assertEquals(2, summary.longestStreakDays());
+    }
+
+    @Test
+    void shouldPreserveHistoricalLongestStreakAfterAReset() {
+        UserId userId = UserId.create();
+
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-10T12:00:00Z", "s1"),
+                activity("2", userId, "2026-07-11T12:00:00Z", "s2"),
+                activity("3", userId, "2026-07-12T12:00:00Z", "s3"),
+                activity("4", userId, "2026-07-17T12:00:00Z", "s4")
+        ));
+
+        assertEquals(1, summary.streakDays());
+        assertEquals(3, summary.longestStreakDays());
+    }
+
+    @Test
+    void shouldUseUtcDayBoundaryRegardlessOfHostClockZone() {
+        UserId userId = UserId.create();
+
+        var summary = calculate(userId, List.of(
+                activity("1", userId, "2026-07-16T23:30:00Z", "s1"),
+                activity("2", userId, "2026-07-17T00:30:00Z", "s2")
+        ));
+
+        assertEquals(2, summary.streakDays());
+        assertEquals("2026-07-17", summary.lastActivityDate());
     }
 
     @Test
     void shouldNotMixUsers() {
         UserId targetUserId = UserId.create();
         UserId otherUserId = UserId.create();
-        Instant now = Instant.now();
 
-        List<LearningActivity> activities = List.of(
-                LearningActivity.restore("1", targetUserId, ActivityType.SPEAKING, SkillType.SPEAKING, 60, now, "s1"),
-                LearningActivity.restore("2", otherUserId, ActivityType.WRITING, SkillType.WRITING, 95, now, "w1")
-        );
+        var summary = calculate(targetUserId, List.of(
+                activity("1", targetUserId, "2026-07-17T08:00:00Z", "s1"),
+                activity("2", otherUserId, "2026-07-16T08:00:00Z", "s2")
+        ));
 
-        var summary = calculator.calculateSummary(
-                targetUserId,
-                activities,
-                new DailyGoal("goal-1", targetUserId, 3, LocalDate.now(ZoneOffset.UTC))
-        );
-
+        assertEquals(1, summary.streakDays());
         assertEquals(1, summary.totalActivities());
-        assertEquals(0, summary.skillProgress().writing());
-        assertEquals(60, summary.skillProgress().speaking());
     }
 
     @Test
-    void shouldBreakCurrentStreakAfterMissingFullDayButPreserveLongest() {
+    void shouldCalculateSkillProgressFromUserActivities() {
         UserId userId = UserId.create();
-        Instant now = Instant.now();
-
         List<LearningActivity> activities = List.of(
-                LearningActivity.restore("1", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 70, now.minusSeconds(86400L * 3), "s1"),
-                LearningActivity.restore("2", userId, ActivityType.WRITING, SkillType.WRITING, 82, now.minusSeconds(86400L * 2), "w1")
+                LearningActivity.restore("1", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 60, NOW, "s1"),
+                LearningActivity.restore("2", userId, ActivityType.SPEAKING, SkillType.SPEAKING, 80, NOW, "s2")
         );
 
-        var summary = calculator.calculateSummary(
+        var summary = calculate(userId, activities);
+
+        assertEquals(70, summary.skillProgress().speaking());
+    }
+
+    private ProgressSummaryView calculate(UserId userId, List<LearningActivity> activities) {
+        return calculator.calculateSummary(userId, activities, new DailyGoal("goal-1", userId, 3, TODAY));
+    }
+
+    private LearningActivity activity(String id, UserId userId, String completedAt, String sourceId) {
+        return LearningActivity.restore(
+                id,
                 userId,
-                activities,
-                new DailyGoal("goal-1", userId, 3, LocalDate.now(ZoneOffset.UTC))
+                ActivityType.SPEAKING,
+                SkillType.SPEAKING,
+                70,
+                Instant.parse(completedAt),
+                sourceId
         );
-
-        assertEquals(0, summary.streakDays());
-        assertEquals(2, summary.longestStreakDays());
     }
 }

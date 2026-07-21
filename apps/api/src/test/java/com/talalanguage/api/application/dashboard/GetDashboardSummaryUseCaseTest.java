@@ -11,10 +11,14 @@ import com.talalanguage.api.infrastructure.auth.InMemoryUserRepository;
 import com.talalanguage.api.infrastructure.goals.InMemoryGoalSettingsRepository;
 import com.talalanguage.api.infrastructure.progress.DefaultProgressCalculator;
 import com.talalanguage.api.infrastructure.progress.InMemoryLearningActivityRepository;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import org.junit.jupiter.api.Test;
 
 class GetDashboardSummaryUseCaseTest {
+
+    private static final Clock CLOCK = Clock.fixed(Instant.parse("2026-07-17T12:00:00Z"), ZoneOffset.UTC);
 
     @Test
     void shouldBuildSummaryForUserWithActivities() {
@@ -24,7 +28,8 @@ class GetDashboardSummaryUseCaseTest {
                 userRepository,
                 activityRepository,
                 new InMemoryGoalSettingsRepository(),
-                new DefaultProgressCalculator()
+                new DefaultProgressCalculator(CLOCK),
+                CLOCK
         );
 
         User user = User.restore(
@@ -36,7 +41,7 @@ class GetDashboardSummaryUseCaseTest {
                 null,
                 null,
                 null,
-                Instant.now(),
+                CLOCK.instant(),
                 Instant.now()
         );
         userRepository.save(user);
@@ -67,7 +72,8 @@ class GetDashboardSummaryUseCaseTest {
                 userRepository,
                 activityRepository,
                 new InMemoryGoalSettingsRepository(),
-                new DefaultProgressCalculator()
+                new DefaultProgressCalculator(CLOCK),
+                CLOCK
         );
 
         User user = User.restore(

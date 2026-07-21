@@ -152,6 +152,10 @@ class RegisterUserUseCaseTest {
         @Override
         public void invalidate(String token) {
         }
+
+        @Override
+        public void invalidateAll(UserId userId) {
+        }
     }
 
     private static final class FakeNotificationRepository implements NotificationRepository {

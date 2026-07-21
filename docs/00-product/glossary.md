@@ -92,6 +92,18 @@ The user's approximate proficiency level for a target language. Initial values:
 
 A correction, suggestion, score, or improvement note provided after a practice activity.
 
+### Practice Content
+
+Learner-authored text, speaking messages, system or AI replies, corrected responses and contextual feedback produced during a practice activity.
+
+### Functional History
+
+A private history that lets the learner revisit the actual practice content, corrections, feedback, metrics and dates needed to understand previous work and evolution.
+
+### Private Learning Content
+
+Practice content owned by one learner. It is private by default, must be protected by backend authorization and must not be exposed in logs or to another learner.
+
 ### Community
 
 The area where users can discover groups, partners, or spaces for practice with other people.

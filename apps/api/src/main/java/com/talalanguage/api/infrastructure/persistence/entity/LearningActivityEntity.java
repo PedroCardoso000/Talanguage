@@ -29,7 +29,7 @@ public class LearningActivityEntity {
     @Column(name = "completed_at", nullable = false)
     private Instant completedAt;
 
-    @Column(name = "source_id", length = 128)
+    @Column(name = "source_id", nullable = false, length = 128)
     private String sourceId;
 
     protected LearningActivityEntity() {

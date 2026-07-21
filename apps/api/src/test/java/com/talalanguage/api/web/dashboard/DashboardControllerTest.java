@@ -1,5 +1,6 @@
 package com.talalanguage.api.web.dashboard;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,7 +69,7 @@ class DashboardControllerTest {
                 "speak-1"
         ));
 
-                mockMvc.perform(get("/api/dashboard/summary")
+        MvcResult dashboardResult = mockMvc.perform(get("/api/dashboard/summary")
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value("Pedro Cardoso"))
@@ -76,7 +77,18 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.weeklyActivityCount").value(1))
                 .andExpect(jsonPath("$.goalCompletionPercent").value(25))
                 .andExpect(jsonPath("$.recentActivities[0].type").value("SPEAKING"))
-                .andExpect(jsonPath("$.nextSuggestedAction.route").value("/write"));
+                .andExpect(jsonPath("$.nextSuggestedAction.route").value("/write"))
+                .andReturn();
+
+        MvcResult progressResult = mockMvc.perform(get("/api/progress/summary")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        assertEquals(
+                objectMapper.readTree(progressResult.getResponse().getContentAsString()).get("streakDays").asInt(),
+                objectMapper.readTree(dashboardResult.getResponse().getContentAsString()).get("currentStreakDays").asInt()
+        );
     }
 
     @Test
